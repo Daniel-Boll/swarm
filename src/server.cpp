@@ -20,7 +20,6 @@
 #include <cstddef>
 #include <cstring>
 #include <swarm/network/context.hpp>
-#include <thread>
 #include <vector>
 
 using namespace swarm;
@@ -29,7 +28,7 @@ void network_broadcast(network::Context* context, const void* data, size_t data_
                        network::Context::PacketType type, bool reliable);
 
 int main() {
-  network::Context context(ENET_HOST_ANY);
+  network::Context context;
   std::vector<ENetPeer*> peers;
 
   while (true) {
@@ -57,7 +56,7 @@ int main() {
           break;
         }
         case ENET_EVENT_TYPE_RECEIVE: {
-          spdlog::info("Received packet from client {}", event.peer->incomingPeerID);
+          spdlog::info("Received packet from client");
           break;
         }
         case ENET_EVENT_TYPE_NONE: {
@@ -66,8 +65,6 @@ int main() {
         }
       }
     }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
   return 0;

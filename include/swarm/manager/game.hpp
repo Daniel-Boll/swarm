@@ -8,18 +8,20 @@
 
 namespace swarm::managers {
   class Game {
-  private:
+  protected:
+    static Game* instance_;
+
+  public:
     std::unique_ptr<network::Context> context;
     flecs::world ecs;
 
   public:
     Game();
+    static Game* get();
 
     Game* init_systems();
     Game* process();
 
     flecs::entity add_player();
-
-    ~Game() = default;
   };
 }  // namespace swarm::managers

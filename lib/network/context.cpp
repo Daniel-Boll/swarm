@@ -5,16 +5,16 @@
 
 namespace swarm::network {
   // Server connection
-  Context::Context(enet_uint32 host_type) {
+  Context::Context() {
     if (enet_initialize() != 0) {
       spdlog::error("An error occurred while trying to initialize ENet.");
       throw std::runtime_error("An error occurred while trying to initialize ENet.");
     }
 
-    ENetAddress addr;
-    enet_address_set_host(&addr, "localhost");
-    addr.port = Context::PORT;
-    this->host = enet_host_create(&addr, 4, 2, 0, 0);
+    ENetAddress address;
+    address.host = ENET_HOST_ANY;
+    address.port = Context::PORT;
+    this->host = enet_host_create(&address, 4, 2, 0, 0);
 
     if (this->host == NULL) {
       spdlog::error("An error occurred while trying to create an ENet server host.");
@@ -25,7 +25,6 @@ namespace swarm::network {
 
     this->client_id = -1;
     this->peer = nullptr;
-    // this->is_server = true;
   }
 
   Context::Context(std::string address) {
@@ -37,7 +36,7 @@ namespace swarm::network {
     this->host = enet_host_create(NULL, 1, 2, 0, 0);
     if (this->host == NULL) {
       spdlog::error("An error occurred while trying to create an ENet client host.");
-      std::runtime_error("An error occurred while trying to create an ENet client host.");
+      throw std::runtime_error("An error occurred while trying to create an ENet client host.");
     }
 
     ENetAddress addr;
@@ -47,18 +46,15 @@ namespace swarm::network {
     this->peer = enet_host_connect(this->host, &addr, 2, 0);
     if (this->peer == NULL) {
       spdlog::error("No available peers for initiating an ENet connection.");
-      std::runtime_error("No available peers for initiating an ENet connection.");
+      throw std::runtime_error("No available peers for initiating an ENet connection.");
     }
-
-    // enet_host_flush(this->host);
 
     spdlog::info("Connected to server at {}:{}", addr.host, addr.port);
 
     this->client_id = 0;
-    // this->is_server = false;
   }
 
-  Context* Context::update() {
+  Context *Context::update() {
     this->handle_events();
     return this;
   }
@@ -72,10 +68,11 @@ namespace swarm::network {
           break;
         }
         case ENET_EVENT_TYPE_RECEIVE: {
-          PacketType* type = (PacketType*)event.packet->data;
+          PacketType *type = (PacketType *)event.packet->data;
+          spdlog::info("Received packet of type");
           switch (*type) {
             case PACKET_PLAYER_JOIN: {
-              int* client_id = (int*)(event.packet->data + sizeof(PacketType));
+              int *client_id = (int *)(event.packet->data + sizeof(PacketType));
               spdlog::info("Player {} joined", *client_id);
 
               break;
@@ -94,6 +91,7 @@ namespace swarm::network {
           break;
         }
         case ENET_EVENT_TYPE_DISCONNECT: {
+          spdlog::info("Disconnected from server");
           break;
         }
         case ENET_EVENT_TYPE_NONE: {
@@ -102,6 +100,28 @@ namespace swarm::network {
         }
       }
     }
+  }
+
+  void Context::send(const void *data, size_t data_size, PacketType type, bool reliable) {
+    if (!peer) return;
+
+    ENetPacket *packet = enet_packet_create(NULL, data_size + sizeof(PacketType),
+                                            reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
+
+    *(PacketType *)packet->data = type;
+    memcpy(packet->data + sizeof(PacketType), data, data_size);
+
+    enet_peer_send(peer, 0, packet);
+  }
+
+  void Context::broadcast(const void *data, size_t data_size, PacketType type, bool reliable) {
+    ENetPacket *packet = enet_packet_create(NULL, data_size + sizeof(PacketType),
+                                            reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
+
+    *(PacketType *)packet->data = type;
+    memcpy(packet->data + sizeof(PacketType), data, data_size);
+
+    enet_host_broadcast(host, 0, packet);
   }
 
   Context::~Context() {

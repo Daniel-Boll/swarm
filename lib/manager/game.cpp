@@ -10,9 +10,17 @@
 #include <swarm/systems/render.hpp>
 
 namespace swarm::managers {
+  Game* Game::instance_ = nullptr;
+
   Game::Game() {
     this->context = std::make_unique<network::Context>(network::Context("localhost"));
     this->ecs = flecs::world();
+  }
+
+  Game* Game::get() {
+    if (instance_ == nullptr) instance_ = new Game();
+
+    return instance_;
   }
 
   Game* Game::init_systems() {
