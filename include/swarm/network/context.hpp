@@ -24,15 +24,16 @@ namespace swarm::network {
     static constexpr enet_uint16 PORT = 7777;
 
   public:
-    Context(enet_uint32 host_type);  // Server
-    Context(std::string address);    // Client
+    Context();                     // Server
+    Context(std::string address);  // Client
 
     Context *update();
+    void broadcast(const void *data, size_t data_size, PacketType type, bool reliable);
+    void send(const void *data, size_t data_size, PacketType type, bool reliable);
 
     ~Context();
 
   private:
-    void broadcast(const void *data, size_t data_size, PacketType type, bool reliable);
     void handle_events();
   };
 
