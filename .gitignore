@@ -3,6 +3,7 @@
 .cache/
 build/
 compile_commands.json
+.vscode/
 
 # MacOS Cache
 .DS_Store
