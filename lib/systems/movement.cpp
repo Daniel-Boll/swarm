@@ -3,7 +3,6 @@
 
 #include <raylib-cpp/Vector2.hpp>
 #include <swarm/manager/game.hpp>
-#include <swarm/network/context.hpp>
 #include <swarm/systems/movement.hpp>
 
 namespace swarm::systems {

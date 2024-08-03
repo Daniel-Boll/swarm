@@ -12,8 +12,6 @@ namespace swarm::components {
       return *this;
     }
 
-    template <class Archive> void serialize(Archive& ar) { ar(translation.x, translation.y); }
-
     ~Position() {}
   };
 }  // namespace swarm::components

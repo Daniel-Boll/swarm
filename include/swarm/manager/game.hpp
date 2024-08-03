@@ -4,7 +4,8 @@
 #include <flecs.h>
 
 #include <optional>
-#include <swarm/network/context.hpp>
+#include <raylib-cpp/raylib-cpp.hpp>
+#include <swarm/network/manager.hpp>
 
 namespace swarm::managers {
   class Game {
@@ -12,7 +13,7 @@ namespace swarm::managers {
     static Game* instance_;
 
   public:
-    network::Context context{"localhost"};
+    network::Manager network;
     flecs::world ecs;
 
   public:
@@ -22,6 +23,8 @@ namespace swarm::managers {
     Game* init_systems();
     Game* process();
 
-    flecs::entity add_player(std::optional<uint32_t> id = std::nullopt);
+    flecs::entity add_player(std::optional<uint32_t> id = std::nullopt,
+                             std::optional<raylib::Vector2> position = std::nullopt,
+                             std::optional<raylib::Color> color = std::nullopt);
   };
 }  // namespace swarm::managers

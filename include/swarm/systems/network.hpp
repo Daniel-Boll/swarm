@@ -6,5 +6,5 @@
 #include <swarm/components/position.hpp>
 
 namespace swarm::systems {
-  void sync(components::Position& position);
+  void sync(const components::Position& position, const components::Network&);
 }  // namespace swarm::systems
