@@ -3,7 +3,7 @@
 #include <enet/enet.h>
 #include <flecs.h>
 
-#include <memory>
+#include <optional>
 #include <swarm/network/context.hpp>
 
 namespace swarm::managers {
@@ -12,7 +12,7 @@ namespace swarm::managers {
     static Game* instance_;
 
   public:
-    std::unique_ptr<network::Context> context;
+    network::Context context{"localhost"};
     flecs::world ecs;
 
   public:
@@ -22,6 +22,6 @@ namespace swarm::managers {
     Game* init_systems();
     Game* process();
 
-    flecs::entity add_player();
+    flecs::entity add_player(std::optional<uint32_t> id = std::nullopt);
   };
 }  // namespace swarm::managers

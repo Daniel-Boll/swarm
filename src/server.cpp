@@ -19,7 +19,9 @@
 
 #include <cstddef>
 #include <cstring>
+#include <swarm/components/position.hpp>
 #include <swarm/network/context.hpp>
+#include <swarm/network/position.hpp>
 #include <vector>
 
 using namespace swarm;
@@ -38,7 +40,7 @@ int main() {
         case ENET_EVENT_TYPE_CONNECT: {
           peers.push_back(event.peer);
 
-          spdlog::info("A new client connected from %x:%u.", event.peer->address.host,
+          spdlog::info("A new client connected from {}:{}.", event.peer->address.host,
                        event.peer->address.port);
 
           size_t client_id = context.host->connectedPeers;
@@ -56,7 +58,45 @@ int main() {
           break;
         }
         case ENET_EVENT_TYPE_RECEIVE: {
-          spdlog::info("Received packet from client");
+          network::Context::PacketType* type = (network::Context::PacketType*)event.packet->data;
+
+          switch (*type) {
+            case network::Context::PACKET_PLAYER_POSITION: {
+              std::vector<std::byte> buffer;
+              buffer.resize(event.packet->dataLength);
+              std::memcpy(buffer.data(), event.packet->data, event.packet->dataLength);
+
+              spdlog::info("Got bytes: {}", (char*)event.packet->data);
+
+              network::PositionIn data;
+              network::PositionIn::deserialize(buffer, data);
+
+              spdlog::info("Received position: ({}, {}) from [{}]", data.position.translation.x,
+                           data.position.translation.y, event.peer->outgoingPeerID);
+
+              // add the client id to the data and broadcast it
+              // uint16_t client_id = event.peer->incomingPeerID;
+              // std::vector<std::byte> buffer(event.packet->dataLength + sizeof(uint16_t));
+              // std::memcpy(buffer.data(), event.packet->data, event.packet->dataLength);
+              // std::memcpy(buffer.data() + event.packet->dataLength, &client_id,
+              // sizeof(uint16_t));
+              //
+              // context.broadcast(buffer.data(), buffer.size(),
+              //                   network::Context::PACKET_PLAYER_POSITION, false);
+
+              break;
+            }
+            case network::Context::PACKET_PLAYER_INPUT: {
+              break;
+            }
+            case network::Context::PACKET_PLAYER_LEAVE: {
+              break;
+            }
+            case network::Context::PACKET_PLAYER_JOIN: {
+              break;
+            }
+          }
+
           break;
         }
         case ENET_EVENT_TYPE_NONE: {

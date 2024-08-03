@@ -1,9 +1,10 @@
 #pragma once
 
-#include <swarm/components/movement.hpp>
+#include <flecs.h>
+
 #include <swarm/components/network.hpp>
+#include <swarm/components/position.hpp>
 
 namespace swarm::systems {
-  // Syncs players movement through the network
-  void sync(swarm::components::Network& network, const swarm::components::Movement& movement);
+  void sync(components::Position& position);
 }  // namespace swarm::systems

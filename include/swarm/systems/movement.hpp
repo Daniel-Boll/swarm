@@ -1,8 +1,12 @@
 #pragma once
 
-#include <swarm/components/movement.hpp>
+#include <flecs.h>
+
+#include <swarm/components/position.hpp>
 #include <swarm/components/stats.hpp>
+#include <swarm/components/velocity.hpp>
 
 namespace swarm::systems {
-  void movement(swarm::components::Movement& movement, const swarm::components::Stats& stats);
+  void movement(flecs::entity it, swarm::components::Position &position,
+                const swarm::components::Velocity &velocity);
 }

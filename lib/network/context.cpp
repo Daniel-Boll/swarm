@@ -1,6 +1,8 @@
 #include <spdlog/spdlog.h>
 
 #include <stdexcept>
+#include <swarm/components/position.hpp>
+#include <swarm/manager/game.hpp>
 #include <swarm/network/context.hpp>
 
 namespace swarm::network {
@@ -69,15 +71,29 @@ namespace swarm::network {
         }
         case ENET_EVENT_TYPE_RECEIVE: {
           PacketType *type = (PacketType *)event.packet->data;
-          spdlog::info("Received packet of type");
+          auto game = managers::Game::get();
+
           switch (*type) {
             case PACKET_PLAYER_JOIN: {
               int *client_id = (int *)(event.packet->data + sizeof(PacketType));
-              spdlog::info("Player {} joined", *client_id);
+
+              if (this->client_id == 0) {
+                this->client_id = *client_id;
+              } else {
+                spdlog::info("Player {} joined", *client_id);
+                game->add_player({*client_id});
+              }
 
               break;
             }
             case PACKET_PLAYER_POSITION: {
+              // auto position
+              //     = components::Position::deserialize(event.packet->data + sizeof(PacketType));
+              // uint16_t client_id = *(uint16_t *)(event.packet->data + sizeof(PacketType)
+              //                                    + sizeof(components::Position));
+              //
+              // spdlog::info("Received player position update: [{}, {}] from player {}",
+              //              position.translation.x, position.translation.y, client_id);
               break;
             }
             case PACKET_PLAYER_INPUT: {
@@ -112,6 +128,12 @@ namespace swarm::network {
     memcpy(packet->data + sizeof(PacketType), data, data_size);
 
     enet_peer_send(peer, 0, packet);
+  }
+
+  void Context::send(NetworkPayload &payload, bool reliable) {
+    if (!peer) return;
+    spdlog::info("Sending bytes: {}", (char *)payload.serialize().data());
+    enet_peer_send(peer, 0, payload.packet(reliable));
   }
 
   void Context::broadcast(const void *data, size_t data_size, PacketType type, bool reliable) {

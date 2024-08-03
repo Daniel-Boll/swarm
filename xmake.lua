@@ -4,7 +4,7 @@ set_version("1.0.0")
 set_languages("c++23")
 add_rules("mode.debug", "mode.release")
 
-local libs = { "raylib-cpp", "flecs", "enet", "spdlog" }
+local libs = { "raylib-cpp", "flecs", "enet", "spdlog", "cereal" }
 
 add_includedirs("include")
 add_requires(table.unpack(libs))
