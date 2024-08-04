@@ -23,6 +23,8 @@ namespace swarm::managers {
     Game* init_systems();
     Game* process();
 
+    flecs::entity get_me();
+    flecs::entity get_player_by_network_id(uint32_t id);
     flecs::entity add_player(std::optional<uint32_t> id = std::nullopt,
                              std::optional<raylib::Vector2> position = std::nullopt,
                              std::optional<raylib::Color> color = std::nullopt);

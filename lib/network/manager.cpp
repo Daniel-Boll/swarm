@@ -1,8 +1,8 @@
+#include <enet/enet.h>
 #include <spdlog/spdlog.h>
 
 #include <swarm/network/manager.hpp>
-
-#include "swarm/network/payload/player-joined.hpp"
+#include <swarm/network/payload/player-joined.hpp>
 
 namespace swarm::network {
   Manager::Manager() {
@@ -58,6 +58,13 @@ namespace swarm::network {
       server = nullptr;
     }
     connectedPeers.clear();
+  }
+
+  ENetPeer* Manager::getPeer(uint32_t id) const {
+    for (ENetPeer* peer : connectedPeers)
+      if (peer->connectID == id) return peer;
+
+    return nullptr;
   }
 
   void Manager::update() {
