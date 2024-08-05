@@ -32,6 +32,7 @@ namespace swarm::network {
     bool isConnected() const;
     void disconnect();
 
+    ENetPeer* getPeer(uint32_t id) const;
     template <typename T> void sendPacket(const T& packet, ENetPeer* peer);
     template <typename T> void sendToServer(const T& packet);
     template <typename T> void broadcastPacket(const T& packet);

@@ -4,10 +4,7 @@
 
 namespace swarm::network {
 
-  enum class PacketType {
-    PLAYER_JOINED,
-    PLAYER_POSITION,
-  };
+  enum class PacketType { PLAYER_JOINED, PLAYER_POSITION, SYNC_NEW_PLAYER };
 
   class BasePacket {
   public:
@@ -27,6 +24,8 @@ namespace swarm::network {
           return "PLAYER_JOINED";
         case PacketType::PLAYER_POSITION:
           return "PLAYER_POSITION";
+        case PacketType::SYNC_NEW_PLAYER:
+          return "SYNC_NEW_PLAYER";
         default:
           return "UNKNOWN";
       }

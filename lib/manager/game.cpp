@@ -3,10 +3,12 @@
 
 #include <raylib-cpp/Vector2.hpp>
 #include <swarm/components/all.hpp>
+#include <swarm/components/renderable.hpp>
 #include <swarm/manager/game.hpp>
 #include <swarm/network/manager.hpp>
 #include <swarm/network/payload/player-joined.hpp>
 #include <swarm/network/payload/player-position.hpp>
+#include <swarm/network/payload/sync-new-player.hpp>
 #include <swarm/systems/input.hpp>
 #include <swarm/systems/movement.hpp>
 #include <swarm/systems/network.hpp>
@@ -29,6 +31,16 @@ namespace swarm::managers {
     return instance_;
   }
 
+  flecs::entity Game::get_me() {
+    return ecs.query<components::Network>().find(
+        [](components::Network& network) { return network.is_local; });
+  }
+
+  flecs::entity Game::get_player_by_network_id(uint32_t id) {
+    return ecs.query<components::Network>().find(
+        [&id](components::Network& network) { return network.id == id; });
+  }
+
   Game* Game::init_systems() {
     // clang-format off
     ecs.system<components::Position, const components::Velocity>()
@@ -49,13 +61,30 @@ namespace swarm::managers {
         [this](const network::PlayerJoinedPacket& packet, ENetPeer* peer) {
           add_player(packet.id, packet.position, packet.color);
 
-          // TODO: update my informations to the new player
+          auto current_player = get_me();
+
+          auto position = current_player.get<components::Position>();
+          // auto color = current_player.get<components::Renderable>()->color;
+
+          // Update the user with my info
+          this->network.sendToServer<network::SyncNewPlayerPacket>({*position, packet.id});
+        });
+
+    network.registerPacketHandler<network::SyncNewPlayerPacket>(
+        [this](const network::SyncNewPlayerPacket& packet, ENetPeer* peer) {
+          auto player = get_player_by_network_id(packet.id);
+
+          if (!player) {
+            spdlog::error("Player with id {} does not exist\n", packet.id);
+            return;
+          }
+
+          player.set<components::Position>({packet.position});
         });
 
     network.registerPacketHandler<network::PlayerPositionPacket>(
         [this](const network::PlayerPositionPacket& packet, ENetPeer* peer) {
-          auto player = ecs.query<components::Network>().find(
-              [&packet](components::Network& network) { return network.id == packet.id; });
+          auto player = get_player_by_network_id(packet.id);
 
           if (!player) {
             spdlog::error("Player with id {} not found\n", packet.id);
