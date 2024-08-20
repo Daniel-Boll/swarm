@@ -1,0 +1,6 @@
+#!/bin/bash
+
+target=${1:-test}
+shift
+
+xmake build $* $target

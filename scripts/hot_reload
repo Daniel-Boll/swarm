@@ -1,0 +1,48 @@
+#!/bin/bash
+
+function usage() {
+  echo -e "Usage: $0 [target]" 1>&2
+  exit 1
+}
+
+function command_exists() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "I require the command $1 but it's not installed. Abort."
+    exit 1
+  fi
+}
+
+function nuke_proc_tree() {
+  local pid="$1"
+  local and_self="${2:-false}"
+  if children="$(pgrep -P "$pid")"; then
+    for child in $children; do
+      nuke_proc_tree "$child" true
+    done
+  fi
+  if [[ "$and_self" == true ]]; then
+    kill "$pid"
+  fi
+}
+
+function graceful_exit() {
+  nuke_proc_tree "$1"
+  exit 0
+}
+
+for i in "inotifywait" "pkill"; do
+  command_exists "$i"
+done
+
+target=${1:-test}
+shift
+
+while true; do
+  ./scripts/build "$target" "$*" && ./scripts/run "$target" "$*" &
+  pid=$!
+
+  trap "graceful_exit $pid" SIGINT SIGTERM
+
+  inotifywait -e modify,create,delete -r include src lib scripts xmake.lua >/dev/null 2>&1
+  nuke_proc_tree "$pid"
+done
